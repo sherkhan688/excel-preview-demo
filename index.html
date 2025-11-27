@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Preview Demo</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        td, th { border: 1px solid #ccc; padding: 6px; }
+    </style>
+</head>
+<body>
+
+<h2>📊 Excel Sheet Preview (WebView Ready)</h2>
+
+<input type="file" id="file" />
+<button onclick="upload()">Upload</button>
+
+<br><br>
+<select id="sheetSelect" onchange="loadSheet()">
+    <option>Select Sheet</option>
+</select>
+
+<table id="table"></table>
+
+<script>
+function upload() {
+    const fileInput = document.getElementById("file");
+    const data = new FormData();
+    data.append("file", fileInput.files[0]);
+
+    fetch("/upload", { method: "POST", body: data })
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById("sheetSelect");
+            select.innerHTML = "";
+            data.sheets.forEach(sheet => {
+                const opt = document.createElement("option");
+                opt.value = sheet;
+                opt.innerText = sheet;
+                select.appendChild(opt);
+            });
+        });
+}
+
+function loadSheet() {
+    const sheet = document.getElementById("sheetSelect").value;
+    fetch(`/sheet?name=${sheet}`)
+        .then(res => res.json())
+        .then(rows => {
+            const table = document.getElementById("table");
+            table.innerHTML = "";
+
+            if (!rows.length) return;
+
+            const header = Object.keys(rows[0]);
+            table.innerHTML += "<tr>" + header.map(h => `<th>${h}</th>`).join("") + "</tr>";
+
+            rows.forEach(row => {
+                table.innerHTML += "<tr>" +
+                    header.map(h => `<td>${row[h]}</td>`).join("") +
+                    "</tr>";
+            });
+        });
+}
+</script>
+
+</body>
+</html>
